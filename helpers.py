@@ -3,13 +3,15 @@ import requests
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
-
+import json
+from google.oauth2.service_account import Credentials
 
 # Function to fetch data from Google Sheets
 def get_google_sheets_data(sheet_name, credentials_file, spreadsheet_name, sheet_range):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
+        creds_dict = json.loads(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(creds_dict)
         client = gspread.authorize(creds)
         spreadsheet = client.open(spreadsheet_name)
         values = spreadsheet.worksheet(sheet_name).get_values(sheet_range)
