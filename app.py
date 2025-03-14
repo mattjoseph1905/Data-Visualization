@@ -44,7 +44,7 @@ low_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["air
 low_total_2nd = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][6], AIRTABLE_API_KEY)
 
 # Fetch Google Sheets Data
-sheets_df = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, config["sheet_range"])
+sheets_df = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_NAME, config["sheet_range"])
 
 # Add Animated Date & Time
 st.subheader("Current Date")
