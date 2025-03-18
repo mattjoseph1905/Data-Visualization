@@ -25,7 +25,7 @@ from datetime import datetime
 AIRTABLE_API_KEY = st.secrets["AIRTABLE"]["PERSONAL_ACCESS_TOKEN"]
 AIRTABLE_BASE_ID = st.secrets["AIRTABLE"]["BASE_ID"]
 AIRTABLE_TABLE_NAME = st.secrets["AIRTABLE"]["TABLE_NAME"]
-GOOGLE_SHEET_CREDENTIALS_FILE = st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"]
+# GOOGLE_SHEET_CREDENTIALS_FILE = st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"]
 GOOGLE_SHEET_NAME = st.secrets["GOOGLE_SHEET"]["NAME"]
 
 # ---- STREAMLIT APP ----
@@ -35,13 +35,14 @@ selected_table = st.sidebar.selectbox("Choose a table:", list(TABLE_CONFIG.keys(
 st.title(selected_table)
 config = TABLE_CONFIG[selected_table]
 
+
 # Add Animated Date & Time
 st.subheader("Current Date")
 datetime_placeholder = st.empty()
 if "time_sheet_range" in config:
     selected_date = get_google_sheet_date_data(
         config["google_sheet_name"],
-        GOOGLE_SHEET_CREDENTIALS_FILE,
+        # GOOGLE_SHEET_CREDENTIALS_FILE,
         GOOGLE_SHEET_NAME,
         config["time_sheet_range"]
     )
