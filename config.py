@@ -23,22 +23,16 @@ TABLE_CONFIG = {
         "time_sheet_range": "F2:G2"
     },
     "ONLINE + SHOPS": {
-        "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa"],
+        "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa", "viw1R2f8dIjvCgmsz", "viwptndKSqXkhIMtw","viwYFEuFmr6uCpKMX","viw4Pylyrbiimves9","viwlxNV6rPrgFKEkN"],
         "google_sheet_name": "(7) CAKES SUM & (8) CAKE BAKING",
-        "sheet_range": "AB1:AE45",
+        "sheet_range": ["AB1:AE45", "AG1:AJ13", "AG16:AJ20", "AG23:AJ26", "AG29:AJ30", "AG33:AJ41"],
         "time_sheet_range": "F2:G2"
     },
     "NEW: RAINBOW SPONGE - BLEND": {
-        "data_sources": ["Source 1", "Source 3"],
-        "blend_config": [
-            {"airtable_field": "Placeholder_Field_3", "sheets_field": "Placeholder_Column_C", "blend_type": "First Non-Empty"}
-        ]
+        "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa", "viw1R2f8dIjvCgmsz", "viwptndKSqXkhIMtw","viwYFEuFmr6uCpKMX","viw4Pylyrbiimves9","viwlxNV6rPrgFKEkN"], 
     },
     "Total Baking - Cupcakes": {
-        "data_sources": ["Source 1", "Source 2"],
-        "blend_config": [
-            {"airtable_field": "Placeholder_Field_4", "sheets_field": "Placeholder_Column_D", "blend_type": "Average"}
-        ]
+        "airtable_views": ["viwwzswpoQX0IdGCh"]
     },
     "WITH STORES Total Baking - Cupcakes": {
         "data_sources": ["Source 2"],
