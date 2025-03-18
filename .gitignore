@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+#files
+sheets-api-access-453011-9f9fe4ee07c1.json
+.streamlit/secrets.toml
+saved_tables.db
+versions
