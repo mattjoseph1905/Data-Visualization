@@ -3,6 +3,7 @@ import requests
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
+
 import os
 from datetime import datetime, timedelta
 import time
@@ -10,12 +11,13 @@ import threading
 import numpy as np
 import json
 import streamlit.components.v1 as components
+from google.oauth2.service_account import Credentials
 
 # Function to fetch data from Google Sheets
-def get_google_sheets_data(sheet_name, credentials_file, spreadsheet_name, sheet_range):
+def get_google_sheets_data(sheet_name, spreadsheet_name, sheet_range):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
+        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"])  
         client = gspread.authorize(creds)
         spreadsheet = client.open(spreadsheet_name)
         values = spreadsheet.worksheet(sheet_name).get_values(sheet_range)
@@ -24,10 +26,10 @@ def get_google_sheets_data(sheet_name, credentials_file, spreadsheet_name, sheet
         st.error(f"Error fetching Google Sheets data: {e}")
         return pd.DataFrame()
 
-def get_google_sheet_date_data(sheet_name, credentials_file, spreadsheet_name, sheet_range):
+def get_google_sheet_date_data(sheet_name, spreadsheet_name, sheet_range):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
+        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"])  
         client = gspread.authorize(creds)
         spreadsheet = client.open(spreadsheet_name)
         values = spreadsheet.worksheet(sheet_name).get_values(sheet_range)
@@ -212,3 +214,5 @@ def refresh_data():
 
 refresh_thread = threading.Thread(target=refresh_data, daemon=True)
 refresh_thread.start()
+
+

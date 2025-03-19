@@ -10,7 +10,6 @@ AIRTABLE_CONFIG = {
 
 # Google Sheets Configuration
 GOOGLE_SHEET_CONFIG = {
-    "CREDENTIALS_FILE": st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"],
     "SHEET_NAME": st.secrets["GOOGLE_SHEET"]["NAME"]
 }
 
