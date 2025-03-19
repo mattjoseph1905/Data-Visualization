@@ -35,8 +35,9 @@ TABLE_CONFIG = {
         "airtable_views": ["viwwzswpoQX0IdGCh"]
     },
     "WITH STORES Total Baking - Cupcakes": {
-        "data_sources": ["Source 2"],
-        "blend_config": []
+        "airtable_views": ["viwwzswpoQX0IdGCh"],
+        "google_sheet_name": "(6) CUPCAKE PRODUCTION",
+        "sheet_range": ["AT80:AV131"],
     },
     "Cheesecakes": {
         "data_sources": ["Source 2", "Source 3"],

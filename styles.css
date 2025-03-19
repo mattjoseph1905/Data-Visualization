@@ -1,12 +1,9 @@
 
-
-/* Background Styling */
 .stApp {
-    background: linear-gradient(to right, #007991, #78ffd6);
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
     font-family: 'Arial', sans-serif;
 }
 
-/* Sidebar Styling */
 .stSidebar {
     background: linear-gradient(to bottom, #ffffff, #e0f7fa);
     border-radius: 10px;
@@ -14,13 +11,11 @@
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Headers */
 .stTitle, .stHeader {
     color: #0d47a1;
     text-align: center;
 }
 
-/* Table Styling */
 .dataframe {
     background: white;
     border-radius: 10px;
@@ -50,7 +45,6 @@ tr:nth-child(odd) {
     background-color: #e3f2fd;
 }
 
-/* Vegan Highlight */
 .vegan {
     background-color: #2e7d32 !important;
     font-weight: bold;
@@ -59,7 +53,6 @@ tr:nth-child(odd) {
     border-radius: 5px;
 }
 
-/* Print Button */
 .stButton>button {
     background: linear-gradient(to right, #1565c0, #64b5f6);
     color: white;
@@ -74,7 +67,6 @@ tr:nth-child(odd) {
     background: linear-gradient(to right, #0d47a1, #42a5f5);
 }
 
-/* Date Header */
 .date-header {
     font-size: 24px;
     font-weight: bold;
@@ -84,4 +76,57 @@ tr:nth-child(odd) {
     border-radius: 5px;
     background: #e3f2fd;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .stApp {
+        background: linear-gradient(to right, #2a2a2a, #3b3b3b);
+        color: #e0e0e0;
+    }
+
+    .stSidebar {
+        background: linear-gradient(to bottom, #1e1e1e, #2a2a2a);
+        box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .stTitle, .stHeader {
+        color: #bbdefb;
+    }
+
+    .dataframe {
+        background: #1e1e1e;
+        box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .dataframe th {
+        background: linear-gradient(to right, #0d47a1, #42a5f5);
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #263238;
+    }
+
+    tr:nth-child(odd) {
+        background-color: #37474f;
+    }
+
+    .vegan {
+        background-color: #66bb6a !important;
+        color: black;
+    }
+
+    .stButton>button {
+        background: linear-gradient(to right, #0d47a1, #42a5f5);
+        color: white;
+    }
+
+    .stButton>button:hover {
+        background: linear-gradient(to right, #64b5f6, #1565c0);
+    }
+
+    .date-header {
+        background: #37474f;
+        color: #bbdefb;
+    }
 }
