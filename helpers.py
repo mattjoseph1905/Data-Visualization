@@ -14,10 +14,10 @@ import streamlit.components.v1 as components
 from google.oauth2.service_account import Credentials
 
 # Function to fetch data from Google Sheets
-def get_google_sheets_data(sheet_name, spreadsheet_name, sheet_range):
+def get_google_sheets_data(sheet_name, credentials_file, spreadsheet_name, sheet_range):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"])  
+        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
         client = gspread.authorize(creds)
         spreadsheet = client.open(spreadsheet_name)
         values = spreadsheet.worksheet(sheet_name).get_values(sheet_range)
@@ -26,19 +26,16 @@ def get_google_sheets_data(sheet_name, spreadsheet_name, sheet_range):
         st.error(f"Error fetching Google Sheets data: {e}")
         return pd.DataFrame()
 
-def get_google_sheet_date_data(sheet_name, spreadsheet_name, sheet_range):
+def get_google_sheet_date_data(sheet_name, credentials_file, spreadsheet_name, sheet_range):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"])  
-
+        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, scope)
         client = gspread.authorize(creds)
         spreadsheet = client.open(spreadsheet_name)
         values = spreadsheet.worksheet(sheet_name).get_values(sheet_range)
         return values[0][0] if values and values[0] else "No Date Available"
     except Exception as e:
         st.error(f"Error fetching Google Sheets date: {e}")
-        return "No Date Available"
 
 def get_airtable_data(base_id, table_name, view_name, api_key):
     url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
@@ -132,60 +129,103 @@ def auto_save_versions(pivot_table, name):
         time.sleep(3600)  # 1 hour
 
 def generate_pivot_table(df, name):
+    # Check if DataFrame is empty
+    if df.empty:
+        st.markdown(
+            """
+            <div class="flex items-center justify-center text-gray-500 dark:text-gray-300 text-lg font-semibold py-10">
+                Oops! No data available.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        return  # Exit function if there is no data or the total sum is 0
 
     df_json = json.dumps(df.to_dict(orient="records"))
-
     html_code = f"""
         <script src="https://cdn.tailwindcss.com"></script>
-        <div class="relative w-full">
-            <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-700" style="table-layout: auto;">
+        
+        <div class="relative w-full min-w-full overflow-x-auto p-4">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-700 
+                         shadow-lg rounded-lg bg-white dark:bg-gray-800 transition-transform duration-300">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 border-b border-gray-300 dark:border-gray-700">
                     <tr>
-                        <th scope="col" class="px-4 py-2 min-w-[50px]">Index</th>
-                        <!-- Header columns will be inserted dynamically by JavaScript -->
+                        <th scope="col" class="px-4 py-2">Index</th>
+                        <!-- Dynamic column headers will be added via JavaScript -->
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 divide-y divide-gray-300 dark:divide-gray-700">
-                    <!-- Table rows will be inserted dynamically by JavaScript -->
+                    <!-- Table rows will be inserted dynamically via JavaScript -->
                 </tbody>
             </table>
         </div>
 
         <script>
             document.addEventListener("DOMContentLoaded", function() {{
-                var tableData = {df_json}; // Pass DataFrame data into JavaScript
+                var tableData = {df_json};
 
-                // Get column names dynamically from the first record
+                // Check if the only row is Grand Total
+                var onlyGrandTotal = tableData.length === 1 && tableData[0]["Sponge Flavour 1"] === "Grand Total";
+
+                if (onlyGrandTotal) {{
+                    tableData = [{{ "Sponge Flavour 1": "Oops! No data" }}]; // Replace with "Oops! No data"
+                }}
+
+                // Get column names dynamically
                 var columns = Object.keys(tableData[0]);
 
-                // Dynamically create table headers
+                // Append dynamic headers
                 var theadRow = document.querySelector('thead tr');
                 columns.forEach(function(column) {{
                     var th = document.createElement('th');
                     th.scope = 'col';
-                    th.className = 'px-4 py-2 min-w-[150px]';
+                    th.className = 'px-4 py-2 text-center';
                     th.innerText = column;
                     theadRow.appendChild(th);
                 }});
 
-                // Dynamically create table rows
+                // Populate table rows dynamically
                 var tableBody = document.getElementById("tableBody");
                 tableData.forEach(function(row, index) {{
                     var tr = document.createElement("tr");
+
+                    // Apply alternating grey & white row colors
+                    tr.className = index % 2 === 0 
+                        ? "bg-white dark:bg-gray-900 transition-transform duration-200 hover:scale-105 hover:shadow-md"
+                        : "bg-gray-100 dark:bg-gray-800 transition-transform duration-200 hover:scale-105 hover:shadow-md";
+
+                    // Apply Vegan row full green
                     if (row["Sponge Flavour 1"] && row["Sponge Flavour 1"].toLowerCase().includes("vegan")) {{
-                        tr.className = "bg-green-200 dark:bg-green-800 border border-gray-300 dark:border-gray-700 hover:bg-green-300 dark:hover:bg-green-900 whitespace-nowrap";
-                    }} else {{
-                        tr.className = "odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap";
+                        tr.classList.add("bg-green-200", "dark:bg-green-800", "hover:bg-green-300", "dark:hover:bg-green-900", "font-semibold");
                     }}
 
-                    // Add index column
-                    tr.innerHTML = `<td class="px-4 py-2 text-center">${{index + 1}}</td>`;
-                    Object.values(row).forEach(function(cell) {{
+                    // Apply bold styling to Grand Total row (only if it's not the only row)
+                    if (row["Sponge Flavour 1"] === "Grand Total" && !onlyGrandTotal) {{
+                        tr.classList.add("font-bold");
+                    }}
+
+                    // Add index column (skip if showing "Oops! No data")
+                    if (!onlyGrandTotal) {{
+                        tr.innerHTML = `<td class="px-4 py-2 text-center font-semibold">${{index + 1}}</td>`;
+                    }} else {{
+                        tr.innerHTML = `<td class="px-4 py-2 text-center font-semibold" colspan="${{columns.length}}">Oops! No data</td>`;
+                    }}
+
+                    Object.keys(row).forEach(function(column) {{
+                        if (onlyGrandTotal) return; // Skip adding normal cells if only showing "Oops! No data"
+
                         var td = document.createElement("td");
-                        td.className = "px-4 py-2";
-                        td.innerText = cell || "0"; // Fallback value for empty cells
+                        td.className = "px-4 py-2 text-gray-600 dark:text-gray-200 text-center";
+
+                        // Apply bold styling to Grand Total column
+                        if (column === "Grand Total" && !onlyGrandTotal) {{
+                            td.classList.add("font-bold");
+                        }}
+
+                        td.innerText = row[column] || "0"; // Handle empty cells
                         tr.appendChild(td);
                     }});
+
                     tableBody.appendChild(tr);
                 }});
             }});
@@ -199,10 +239,10 @@ def generate_pivot_table(df, name):
 
     # Set the height dynamically based on row count
     table_height = header_height + (row_count * row_height)
-
+    print(row_count)
     # Set a minimum height (to avoid too small a height)
-    table_height = max(table_height, 100)  # Ensure it is at least 600px
-
+    table_height = max(table_height, 300)  # Ensure it is at least 300px
+    
     components.html(html_code, height=table_height)
 
     save_thread = threading.Thread(target=auto_save_versions, args=(df, name), daemon=True)
@@ -216,5 +256,3 @@ def refresh_data():
 
 refresh_thread = threading.Thread(target=refresh_data, daemon=True)
 refresh_thread.start()
-
-

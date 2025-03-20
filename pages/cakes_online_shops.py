@@ -2,7 +2,6 @@ import pandas as pd
 import streamlit as st
 import time
 from helpers import generate_pivot_table
-import streamlit as st
 from config import TABLE_CONFIG
 from helpers import (
     get_google_sheets_data,
@@ -20,8 +19,27 @@ AIRTABLE_TABLE_NAME = st.secrets["AIRTABLE"]["TABLE_NAME"]
 GOOGLE_SHEET_CREDENTIALS_FILE = st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"]
 GOOGLE_SHEET_NAME = st.secrets["GOOGLE_SHEET"]["NAME"]
 
-
 config = TABLE_CONFIG["ONLINE + SHOPS"]
+reg_am = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][1], AIRTABLE_API_KEY)
+reg_pm = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][2], AIRTABLE_API_KEY)
+
+# Ensure the "Eligibility" column exists in the DataFrame
+if "Eligibility" in reg_am.columns:
+    eligibility_am = reg_am["Eligibility"].iloc[0]  # Get the first unique value
+    print("Eligibility:", eligibility_am)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
+
+if "Eligibility" in reg_pm.columns:
+    eligibility_pm = reg_pm["Eligibility"].iloc[0]
+    print("Eligibility:", eligibility_pm)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
+
+    
+eligibility_am = str(eligibility_am)
+eligibility_pm = str(eligibility_pm)
+
 datetime_placeholder = st.empty()
 if "time_sheet_range" in config:
     selected_date = get_google_sheet_date_data(
@@ -33,18 +51,54 @@ if "time_sheet_range" in config:
 else:
     selected_date = "No Date Configured"
 
-col1, col2 = st.columns(2, vertical_alignment="center", border=False)
+# Load and apply external CSS file
+def load_css(file_name):
+    with open(file_name, "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+load_css("styles.css")
+
+st.markdown('<div class="page-header">CUPCAKE BAKING LIST - ONLINE ONLY</div>', unsafe_allow_html=True)
+
+# Define Columns (Keep Original Layout)
+col1, col2, col3 = st.columns(3)
+
 with col1:
     st.markdown(
-        f'<div style="background-color: rgba(150, 110, 255, 0.7); padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 500px; margin-bottom: 20px">BAKING LIST (ONLINE + SHOPS)</div>',
+        f'''
+        <div class="date-header">
+            <span class="small-text">AM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_am}</span>
+        </div>
+        ''',
         unsafe_allow_html=True
     )
+
 with col2:
     st.markdown(
-        f'<div class="date-header" style="display: inline-block; background-color: rgba(255, 230, 150, 0.7); color: black; padding: 5px; border-radius: 5px; width: 500px; margin-bottom: 20px">{selected_date}</div>',
+        f'''
+        <div class="date-header">
+            <span class="small-text">PM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_pm}</span>
+        </div>
+        ''',
         unsafe_allow_html=True
     )
+
+with col3:
+    st.markdown(
+        f'''
+        <div class="date-header">
+            <span class="small-text">Time and Date for Baking List:</span> </br>
+            <span class="large-text">{selected_date}</span>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
+
 tables = None
+
 reg_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][0], AIRTABLE_API_KEY)
 reg_total_2nd = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][1], AIRTABLE_API_KEY)
 skinny_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][2], AIRTABLE_API_KEY)
@@ -60,8 +114,6 @@ thin_sheet = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CR
 low_sheet = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, config["sheet_range"][3])
 skinny_sheet = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, config["sheet_range"][4])
 cheesecake_sheet = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, config["sheet_range"][5])
-
-
 
 def online_shops(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total, low_total, low_total_2nd, reg_sheet, gf_reg_sheet, thin_sheet, low_sheet, skinny_sheet, cheesecake_sheet):
     # Select only required columns from Airtable
@@ -110,7 +162,7 @@ def online_shops(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
     grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
     cakes_reg_table = pd.concat([cakes_reg_table, grand_total_row], ignore_index=True)
     st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Reg Sponge Total</div>',
+        '<div class="table-header">Cakes - Reg Sponge Total</div>',
         unsafe_allow_html=True
     )
     generate_pivot_table(cakes_reg_table, "Cakes - Reg Sponge Total" )
@@ -134,7 +186,7 @@ def online_shops(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
     grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
     skinny_total_table = pd.concat([skinny_total_table, grand_total_row], ignore_index=True)
     st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Skinny Sponge Total</div>',
+        '<div class="table-header">Cakes - Skinny Sponge Total</div>',
         unsafe_allow_html=True
     )
     generate_pivot_table(skinny_total_table, "Cakes - Skinny Sponge Total")
@@ -161,7 +213,7 @@ def online_shops(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
     grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
     thin_total_table = pd.concat([thin_total_table, grand_total_row], ignore_index=True)
     st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Thin Sponge Total</div>',
+        '<div class="table-header">Cakes - Thin Sponge Total</div>',
         unsafe_allow_html=True
     )
     generate_pivot_table(thin_total_table, "Cakes - Thin Sponge Total")
@@ -188,7 +240,7 @@ def online_shops(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
     grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
     low_total_table = pd.concat([low_total_table, grand_total_row], ignore_index=True)
     st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Low Sponge Total</div>',
+        '<div class="table-header">Cakes - Low Sponge Total</div>',
         unsafe_allow_html=True
     )
     generate_pivot_table(low_total_table, "Cakes - Low Sponge Total")

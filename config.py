@@ -16,7 +16,7 @@ GOOGLE_SHEET_CONFIG = {
 # Table Configurations
 TABLE_CONFIG = {
     "Total Baking - Cakes": {
-        "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa", "viw1R2f8dIjvCgmsz", "viwptndKSqXkhIMtw","viwYFEuFmr6uCpKMX","viw4Pylyrbiimves9","viwlxNV6rPrgFKEkN"],
+        "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa", "viw1R2f8dIjvCgmsz", "viwptndKSqXkhIMtw","viwYFEuFmr6uCpKMX","viw4Pylyrbiimves9","viwlxNV6rPrgFKEkN", "viwAIczK0B8bxFFOy", "viwQfxl6ZQKi74xlb"],
         "google_sheet_name": "(7) CAKES SUM & (8) CAKE BAKING",
         "sheet_range": "AB1:AE45",
         "time_sheet_range": "F2:G2"
@@ -31,12 +31,12 @@ TABLE_CONFIG = {
         "airtable_views": ["viwXT63LCBVLAhGWT", "viwwjOlUiBR7OMWVa", "viw1R2f8dIjvCgmsz", "viwptndKSqXkhIMtw","viwYFEuFmr6uCpKMX","viw4Pylyrbiimves9","viwlxNV6rPrgFKEkN"], 
     },
     "Total Baking - Cupcakes": {
-        "airtable_views": ["viwwzswpoQX0IdGCh"]
+        "airtable_views": ["viwwzswpoQX0IdGCh", "viwAIczK0B8bxFFOy", "viwQfxl6ZQKi74xlb"]
     },
     "WITH STORES Total Baking - Cupcakes": {
-        "airtable_views": ["viwwzswpoQX0IdGCh"],
+        "airtable_views": ["viwwzswpoQX0IdGCh", "viwAIczK0B8bxFFOy", "viwQfxl6ZQKi74xlb"],
         "google_sheet_name": "(6) CUPCAKE PRODUCTION",
-        "sheet_range": ["AT80:AV131"],
+        "sheet_range": ["AT80:AV131", "G2"],
     },
     "Cheesecakes": {
         "data_sources": ["Source 2", "Source 3"],

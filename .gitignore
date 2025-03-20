@@ -176,3 +176,12 @@ sheets-api-access-453011-9f9fe4ee07c1.json
 .streamlit/secrets.toml
 saved_tables.db
 versions
+*.svg
+*.woff2
+package.json
+package-lock.json
+.package-lock.json
+bootstrap-icons.css
+bootstrap-icons.min.css
+bootstrap-icons.scss
+bootstrap-icons.json
