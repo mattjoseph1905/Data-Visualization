@@ -22,11 +22,27 @@ GOOGLE_SHEET_CREDENTIALS_FILE = st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"]
 GOOGLE_SHEET_NAME = st.secrets["GOOGLE_SHEET"]["NAME"]
 
 
-st.title("Total Baking - Cupcakes")
 config = TABLE_CONFIG["WITH STORES Total Baking - Cupcakes"]
+reg_am = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][1], AIRTABLE_API_KEY)
+reg_pm = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][2], AIRTABLE_API_KEY)
 
-# Add Animated Date & Time
-st.subheader("Current Date")
+# Ensure the "Eligibility" column exists in the DataFrame
+if "Eligibility" in reg_am.columns:
+    eligibility_am = reg_am["Eligibility"].iloc[0]  # Get the first unique value
+    print("Eligibility:", eligibility_am)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
+
+if "Eligibility" in reg_pm.columns:
+    eligibility_pm = reg_pm["Eligibility"].iloc[0]
+    print("Eligibility:", eligibility_pm)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
+
+    
+eligibility_am = str(eligibility_am)
+eligibility_pm = str(eligibility_pm)
+
 datetime_placeholder = st.empty()
 if "time_sheet_range" in config:
     selected_date = get_google_sheet_date_data(
@@ -38,17 +54,42 @@ if "time_sheet_range" in config:
 else:
     selected_date = "No Date Configured"
 
-col1, col2 = st.columns(2, vertical_alignment="center", border=False)
+# Load and apply external CSS file
+def load_css(file_name):
+    with open(file_name, "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+load_css("styles.css")
+
+st.markdown('<div class="page-header">CUPCAKE BAKING LIST - ONLINE ONLY</div>', unsafe_allow_html=True)
+
+# Define Columns (Keep Original Layout)
+col1, col2 = st.columns(2)
+
 with col1:
     st.markdown(
-        f'<div class="date-header" style="display: inline-block; background-color: rgba(255, 230, 150, 0.7); color: black; padding: 5px; border-radius: 5px; width: 500px; margin-bottom: 20px">CUPCAKES (ONLINE + SHOPS)</div>',
+        f'''
+        <div class="date-header">
+            <span class="small-text">AM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_am}</span>
+        </div>
+        ''',
         unsafe_allow_html=True
     )
+
 with col2:
     st.markdown(
-        f'<div class="date-header" style="display: inline-block; background-color: rgba(255, 230, 150, 0.7); color: black; padding: 5px; border-radius: 5px; width: 500px; margin-bottom: 20px">{selected_date}</div>',
+        f'''
+        <div class="date-header">
+            <span class="small-text">PM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_pm}</span>
+        </div>
+        ''',
         unsafe_allow_html=True
     )
+
+
 tables = None
 
 cupcakes_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][0], AIRTABLE_API_KEY)
@@ -77,16 +118,6 @@ def cupcake_total(cupcakes_total, cupcake_sheet):
     cupcakes_total["Lineitem Quantity"] = pd.to_numeric(cupcakes_total["Lineitem Quantity"], errors="coerce").fillna(0).astype(int)
     cupcakes_total = pd.concat([cupcakes_total, cupcake_sheet])
     cupcakes_total = cupcakes_total.groupby(["Sponge Flavour 1", "Sponge Size 1"], as_index=False)[[ "Lineitem Quantity"]].sum()
-    
-    # Apply CASE-like logic to create a single 'Mix Size' column
-    # cupcakes_total["Mix Size"] = cupcakes_total.apply(
-    #     lambda row: 0.075 * row["Lineitem Quantity"] if row["Sponge Size 1"] == "Regular Cupcake"
-    #     else 0.02 * row["Lineitem Quantity"] if row["Sponge Size 1"] == "Mini Cupcake"
-    #     else 0, axis=1
-    # )
-    
-    # Apply rounding to one decimal place for all relevant numeric columns
-    # cupcakes_total["Mix Size"] = cupcakes_total["Mix Size"]
 
     cupcakes_total_table = cupcakes_total.pivot_table(
         index="Sponge Flavour 1",
@@ -108,7 +139,7 @@ def cupcake_total(cupcakes_total, cupcake_sheet):
     cupcakes_total_table = pd.concat([cupcakes_total_table, grand_total_row], ignore_index=True)
     
 
-    st.subheader(f"Total Cupcakes - ONLINE ONLY")
+    st.markdown('<div class="table-header">Total Cupcakes - ONLINE ONLY</div>', unsafe_allow_html=True)
     generate_pivot_table(cupcakes_total_table, "cupcakes_total_table" )
     
     return

@@ -23,8 +23,26 @@ GOOGLE_SHEET_CREDENTIALS_FILE = st.secrets["GOOGLE_SHEET"]["CREDENTIALS_FILE"]
 GOOGLE_SHEET_NAME = st.secrets["GOOGLE_SHEET"]["NAME"]
 
 config = TABLE_CONFIG["Total Baking - Cakes"]
+reg_am = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][7], AIRTABLE_API_KEY)
+reg_pm = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][8], AIRTABLE_API_KEY)
+
+# Ensure the "Eligibility" column exists in the DataFrame
+if "Eligibility" in reg_am.columns:
+    eligibility_am = reg_am["Eligibility"].iloc[0]  # Get the first unique value
+    print("Eligibility:", eligibility_am)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
+
+if "Eligibility" in reg_pm.columns:
+    eligibility_pm = reg_pm["Eligibility"].iloc[0]
+    print("Eligibility:", eligibility_pm)
+else:
+    print("Error: 'Eligibility' column not found in DataFrame")
 
     
+eligibility_am = str(eligibility_am)
+eligibility_pm = str(eligibility_pm)
+
 datetime_placeholder = st.empty()
 if "time_sheet_range" in config:
     selected_date = get_google_sheet_date_data(
@@ -36,18 +54,52 @@ if "time_sheet_range" in config:
 else:
     selected_date = "No Date Configured"
 
-col1, col2 = st.columns(2, vertical_alignment="center", border=False)
+
+# Load and apply external CSS file
+def load_css(file_name):
+    with open(file_name, "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+load_css("styles.css")
+
+st.markdown('<div class="page-header">BAKING LIST</div>', unsafe_allow_html=True)
+
+# Define Columns (Keep Original Layout)
+col1, col2, col3 = st.columns(3)
+
 with col1:
     st.markdown(
-        f'<div style="background-color: rgba(150, 110, 255, 0.7); padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 500px; margin-bottom: 20px">BAKING LIST</div>',
-        unsafe_allow_html=True
-    )
-with col2:
-    st.markdown(
-        f'<div class="date-header" style="display: inline-block; background-color: rgba(255, 230, 150, 0.7); color: black; padding: 5px; border-radius: 5px; width: 500px; margin-bottom: 20px">{selected_date}</div>',
+        f'''
+        <div class="date-header">
+            <span class="small-text">AM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_am}</span>
+        </div>
+        ''',
         unsafe_allow_html=True
     )
 
+with col2:
+    st.markdown(
+        f'''
+        <div class="date-header">
+            <span class="small-text">PM Delivery on:</span> </br>
+            <span class="large-text">{eligibility_pm}</span>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
+
+with col3:
+    st.markdown(
+        f'''
+        <div class="date-header">
+            <span class="small-text">Time and Date for Baking List:</span> </br>
+            <span class="large-text">{selected_date}</span>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
 # Move the "Refresh Data" button to the sidebar
 with st.sidebar:
     if st.button("Refresh Data", key="refresh_button"):
@@ -63,6 +115,7 @@ thin_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["ai
 slim_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][4], AIRTABLE_API_KEY)
 low_total = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][5], AIRTABLE_API_KEY)
 low_total_2nd = get_airtable_data(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, config["airtable_views"][6], AIRTABLE_API_KEY)
+
 
 # Fetch Google Sheets Data
 reg_sheet = get_google_sheets_data(config["google_sheet_name"], GOOGLE_SHEET_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, config["sheet_range"])
@@ -100,10 +153,7 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
     grand_total_row = df.sum(numeric_only=True)
     grand_total_row["Sponge Flavour 1"] = "Grand Total"
     df = pd.concat([df, grand_total_row.to_frame().T], ignore_index=True)
-    st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Reg Sponge Total</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="table-header">Cakes - Reg Sponge Total</div>', unsafe_allow_html=True)
     generate_pivot_table(df, "Cakes - Reg Sponge Total")
     # Display the grand total in a text box below the first table
     grand_total = merged_df["Total"].sum()
@@ -112,6 +162,7 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
         unsafe_allow_html=True
     )
     
+
     # Cakes Skinny Total
     column_check(skinny_total)
     skinny_total = skinny_total[required_columns]
@@ -123,27 +174,21 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
         fill_value=0
     ).reset_index() 
 
-    # Add Grand Total column
-    skinny_total_table["Grand Total"] = skinny_total_table.select_dtypes(include=[np.number]).sum(axis=1)
-
-    # Add Grand Total row
-    grand_total_row = skinny_total_table.sum(numeric_only=True)
-    grand_total_row["Sponge Flavour 1"] = "Grand Total"
-    skinny_total_table = pd.concat([skinny_total_table, grand_total_row.to_frame().T], ignore_index=True)
-
-    skinny_total_table.attrs['name']  = "Cakes - Skinny Total"
-    numeric_cols = skinny_total_table.columns.difference(["Sponge Flavour 1"])
+    # Add Grand Total column first
+    numeric_cols = skinny_total_table.select_dtypes(include=[np.number]).columns
     skinny_total_table["Grand Total"] = skinny_total_table[numeric_cols].sum(axis=1)
-    numeric_cols = skinny_total_table.columns.difference(["Sponge Flavour 1"])
-    grand_total_row = pd.DataFrame(skinny_total_table[numeric_cols].sum()).T
-    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
+
+    # Compute the Grand Total row, including the bottom-right Grand Total
+    grand_total_row = skinny_total_table[numeric_cols].sum().to_frame().T
+    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")
+    grand_total_row["Grand Total"] = grand_total_row[numeric_cols].sum(axis=1)  # Fix last cell
+
+    # Append Grand Total row
     skinny_total_table = pd.concat([skinny_total_table, grand_total_row], ignore_index=True)
-    st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Skinny Sponge Total</div>',
-        unsafe_allow_html=True
-    )
-    generate_pivot_table(skinny_total_table, "skinny_Cake - Skinny Sponge Totalotal_table")
-    
+
+    st.markdown('<div class="table-header">Cakes - Skinny Sponge Total</div>', unsafe_allow_html=True)
+    generate_pivot_table(skinny_total_table, "skinny_Cake - Skinny Sponge Total")
+
     # Cakes Slim Total
     column_check(slim_total)
     slim_total = slim_total[required_columns]
@@ -155,31 +200,25 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
         fill_value=0
     ).reset_index() 
 
-    # Add Grand Total column
-    cakes_slim_table["Grand Total"] = cakes_slim_table.select_dtypes(include=[np.number]).sum(axis=1)
-
-    # Add Grand Total row
-    grand_total_row = cakes_slim_table.sum(numeric_only=True)
-    grand_total_row["Sponge Flavour 1"] = "Grand Total"
-    cakes_slim_table = pd.concat([cakes_slim_table, grand_total_row.to_frame().T], ignore_index=True)
-
-    cakes_slim_table.attrs['name']  = "Cakes - Slim Total"
-    numeric_cols = cakes_slim_table.columns.difference(["Sponge Flavour 1"])
+    # Add Grand Total column first
+    numeric_cols = cakes_slim_table.select_dtypes(include=[np.number]).columns
     cakes_slim_table["Grand Total"] = cakes_slim_table[numeric_cols].sum(axis=1)
-    numeric_cols = cakes_slim_table.columns.difference(["Sponge Flavour 1"])
-    grand_total_row = pd.DataFrame(cakes_slim_table[numeric_cols].sum()).T
-    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
+
+    # Compute the Grand Total row, including the bottom-right Grand Total
+    grand_total_row = cakes_slim_table[numeric_cols].sum().to_frame().T
+    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")
+    grand_total_row["Grand Total"] = grand_total_row[numeric_cols].sum(axis=1)  # Fix last cell
+
+    # Append Grand Total row
     cakes_slim_table = pd.concat([cakes_slim_table, grand_total_row], ignore_index=True)
-    st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Slim Sponge Total</div>',
-        unsafe_allow_html=True
-    )
+
+    st.markdown('<div class="table-header">Cakes - Slim Sponge Total</div>', unsafe_allow_html=True)
     generate_pivot_table(cakes_slim_table, "Cakes - Slim Sponge Total")
-    
+
     # Cakes Thin Total
     column_check(thin_total)
     thin_total = thin_total[required_columns]
-    thin_total = thin_total.groupby(["Sponge Flavour 1", "Sponge Size 1"], as_index=False)[[ "Sponge QTY 1 - Calculated"]].sum()
+    thin_total = thin_total.groupby(["Sponge Flavour 1", "Sponge Size 1"], as_index=False)[["Sponge QTY 1 - Calculated"]].sum()
     thin_total_table = thin_total.pivot_table(
         index="Sponge Flavour 1",
         columns="Sponge Size 1",
@@ -188,35 +227,27 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
         fill_value=0
     ).reset_index() 
 
-    # Add Grand Total column
-    thin_total_table["Grand Total"] = thin_total_table.select_dtypes(include=[np.number]).sum(axis=1)
+    # Add Grand Total column first
+    numeric_cols = thin_total_table.select_dtypes(include=[np.number]).columns
+    thin_total_table["Grand Total"] = thin_total_table[numeric_cols].sum(axis=1)
 
-    # Add Grand Total row
-    grand_total_row = thin_total_table.sum(numeric_only=True)
-    grand_total_row["Sponge Flavour 1"] = "Grand Total"
-    thin_total_table = pd.concat([thin_total_table, grand_total_row.to_frame().T], ignore_index=True)
+    # Compute the Grand Total row, including the bottom-right Grand Total
+    grand_total_row = thin_total_table[numeric_cols].sum().to_frame().T
+    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")
+    grand_total_row["Grand Total"] = grand_total_row[numeric_cols].sum(axis=1)  # Fix last cell
 
-    print(thin_total_table)
-    thin_total_table.attrs['name']  = "Cakes - Thin total"
-    numeric_cols = thin_total_table.columns.difference(["Sponge Flavour 1"])
-    thin_total_table[numeric_cols] = thin_total_table[numeric_cols].fillna(0).astype(int)
-    thin_total_table["Grand Total"] = thin_total_table[numeric_cols].sum(axis=1).astype(int)
-    numeric_cols = thin_total_table.columns.difference(["Sponge Flavour 1"])
-    grand_total_row = pd.DataFrame(thin_total_table[numeric_cols].sum()).T
-    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
+    # Append Grand Total row
     thin_total_table = pd.concat([thin_total_table, grand_total_row], ignore_index=True)
-    st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Thin Sponge Total</div>',
-        unsafe_allow_html=True
-    )
+
+    st.markdown('<div class="table-header">Cakes - Thin Sponge Total</div>', unsafe_allow_html=True)
     generate_pivot_table(thin_total_table, "Cakes - Thin Sponge Total")
-    
+
     # Cakes Low Total
     column_check(low_total)
     column_check(low_total_2nd)
     low_total = low_total[required_columns]
     low_total = pd.concat([low_total, low_total_2nd])
-    low_total = low_total.groupby(["Sponge Flavour 1", "Sponge Size 1"], as_index=False)[[ "Sponge QTY 1 - Calculated"]].sum()
+    low_total = low_total.groupby(["Sponge Flavour 1", "Sponge Size 1"], as_index=False)[["Sponge QTY 1 - Calculated"]].sum()
     low_total_table = low_total.pivot_table(
         index="Sponge Flavour 1",
         columns="Sponge Size 1",
@@ -225,26 +256,19 @@ def total_baking(reg_total, reg_total_2nd, skinny_total, thin_total, slim_total,
         fill_value=0
     ).reset_index() 
 
-    # Add Grand Total column
-    low_total_table["Grand Total"] = low_total_table.select_dtypes(include=[np.number]).sum(axis=1)
+    # Add Grand Total column first
+    numeric_cols = low_total_table.select_dtypes(include=[np.number]).columns
+    low_total_table["Grand Total"] = low_total_table[numeric_cols].sum(axis=1)
 
-    # Add Grand Total row
-    grand_total_row = low_total_table.sum(numeric_only=True)
-    grand_total_row["Sponge Flavour 1"] = "Grand Total"
-    low_total_table = pd.concat([low_total_table, grand_total_row.to_frame().T], ignore_index=True)
+    # Compute the Grand Total row, including the bottom-right Grand Total
+    grand_total_row = low_total_table[numeric_cols].sum().to_frame().T
+    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")
+    grand_total_row["Grand Total"] = grand_total_row[numeric_cols].sum(axis=1)  # Fix last cell
 
-    low_total_table.attrs['name']  = "Cakes - Thin total"
-    numeric_cols = low_total_table.columns.difference(["Sponge Flavour 1"])
-    low_total_table[numeric_cols] = low_total_table[numeric_cols].fillna(0).astype(int)
-    low_total_table["Grand Total"] = low_total_table[numeric_cols].sum(axis=1).astype(int)
-    numeric_cols = low_total_table.columns.difference(["Sponge Flavour 1"])
-    grand_total_row = pd.DataFrame(low_total_table[numeric_cols].sum()).T
-    grand_total_row.insert(0, "Sponge Flavour 1", "Grand Total")  
+    # Append Grand Total row
     low_total_table = pd.concat([low_total_table, grand_total_row], ignore_index=True)
-    st.markdown(
-        f'<div style="background-color: #fba0e3; padding: 10px; text-align: center; color: white; font-size: 20px; font-weight: bold; border-radius: 5px; width: 1000px; margin-bottom: 20px">Cakes - Low Sponge Total</div>',
-        unsafe_allow_html=True
-    )
+
+    st.markdown('<div class="table-header">Cakes - Low Sponge Total</div>', unsafe_allow_html=True)
     generate_pivot_table(low_total_table, "Cakes - Low Sponge Total")
     return 
 
